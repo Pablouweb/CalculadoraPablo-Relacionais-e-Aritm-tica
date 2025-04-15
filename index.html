@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora Aritmética e Relacional</title>
+  <style>
+    /* Aqui começa o estilo da página */
+    body {
+      font-family: Arial, sans-serif;
+      /* Fonte do texto */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+      /* Cor de fundo clara */
+      background-image: url(./matbg.jpg);
+      /* Uma imagem com padrões repetitivos como background(sendo assim nas demais páginas também) */
+      background-size: 300px;
+      /* Aqui é o tamanho de cada réplica de imagem que vai preenchendo o Bg inteiro */
+    }
+
+    .calculadora {
+      background: white;
+      /* Fundo branco para a calculadora */
+      padding: 30px;
+      /* Espaço dentro da calculadora */
+      border-radius: 10px;
+      /* Cantos mais redondinhos */
+      box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+      /* Sombra ao redor da cálculadora */
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .calculadora h2 {
+      font-size: 20px;
+      text-align: center;
+    }
+
+    #valor1,
+    #valor2 {
+      max-width: 375px;
+    }
+
+    input,
+    select,
+    button {
+      margin: 10px 0;
+      /* Espaço entre os elementos */
+      padding: 10px;
+      /* Espaço dentro dos campos */
+      width: 100%;
+      /* Faz ocupar toda a largura */
+      font-size: 16px;
+      /* Tamanho da letra */
+    }
+
+    .resultado {
+      margin-top: 20px;
+      font-size: 20px;
+      /* Tamanho do texto do resultado */
+      font-weight: bold;
+      /* Deixa o texto em negrito */
+    }
+
+    /* Estilo do botão que abre o modal */
+    .btn-historico {
+      background-color: #007bff;
+      color: white;
+      padding: 10px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 20px;
+      border-radius: 5px;
+    }
+
+    .btn-historico:hover {
+      background-color: #0026ff92;
+    }
+
+    /* Estilo do modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+      padding-top: 60px;
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 500px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    /* Estilo do histórico dentro do modal */
+    .historico ul {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    .historico li {
+      background-color: #e0e0e0;
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .historico button {
+      padding: 5px 10px;
+      background-color: #ff5733;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+
+    .historico button:hover {
+      background-color: #c13d2e;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="calculadora">
+    <h2>Calculadora Aritmética e Relacional</h2>
+    <!-- Campo para digitar o primeiro número -->
+    <input type="number" id="valor1" placeholder="Digite o primeiro número">
+
+    <!-- Campo para digitar o segundo número -->
+    <input type="number" id="valor2" placeholder="Digite o segundo número">
+
+    <!-- Aqui escolhemos qual operação queremos fazer -->
+    <select id="operador">
+      <option value="+">+</option>
+      <option value="-">-</option>
+      <option value="*">*</option>
+      <option value="/">/</option>
+      <option value="%">%</option>
+      <option value="==">== (igual a)</option>
+      <option value="!=">!= (diferente de)</option>
+      <option value=">">&gt; (maior que)</option>
+      <option value="<">&lt; (menor que)</option>
+      <option value=">=">&gt;= (maior ou igual)</option>
+      <option value="<=">&lt;= (menor ou igual)</option>
+    </select>
+
+    <!-- Botão que chama a função pra fazer o cálculo -->
+    <button onclick="calcular()">Calcular</button>
+
+    <!-- Aqui vai aparecer o resultado -->
+    <div class="resultado" id="resultado"></div>
+
+    <!-- Botão para abrir o modal com o histórico -->
+    <button class="btn-historico" onclick="abrirModal()">Ver Histórico</button>
+  </div>
+
+  <!-- Modal -->
+  <div id="modalHistorico" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Histórico de Operações</h3>
+        <button class="modal-close" onclick="fecharModal()">&times;</button>
+      </div>
+      <div class="historico">
+        <ul id="historico-lista"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Função pra fazer os cálculos quando o botão for clicado
+    function calcular() {
+      // Pegamos o valor do primeiro número e transformamos em número mesmo
+      const v1 = parseFloat(document.getElementById('valor1').value);
+      // Pegamos o valor do segundo número
+      const v2 = parseFloat(document.getElementById('valor2').value);
+      // Aqui a gente vê qual operador foi escolhido
+      const operador = document.getElementById('operador').value;
+      let resultado;
+
+      // Aqui a gente usa o switch para ver qual conta ou comparação deve ser feita
+      switch (operador) {
+        case '+':
+          resultado = v1 + v2; // soma os dois números
+          break;
+        case '-':
+          resultado = v1 - v2; // subtrai um do outro
+          break;
+        case '*':
+          resultado = v1 * v2; // multiplica os dois
+          break;
+        case '/':
+          // se o segundo número não for zero, divide, se não dá erro.
+          resultado = v2 !== 0 ? v1 / v2 : 'Erro: Divisão por zero';
+          break;
+        case '%':
+          resultado = v1 % v2; // pega o resto da divisão EX:(Se dividir 3 balas pra 2 pessoas, o resto da dividão é 1.)
+          break;
+        case '==':
+          resultado = v1 == v2; // verifica se são iguais
+          break;
+        case '!=':
+          resultado = v1 != v2; // verifica se são diferentes
+          break;
+        case '>':
+          resultado = v1 > v2; // verifica se o primeiro é maior
+          break;
+        case '<':
+          resultado = v1 < v2; // verifica se o primeiro é menor
+          break;
+        case '>=':
+          resultado = v1 >= v2; // verifica se o primeiro é maior ou igual
+          break;
+        case '<=':
+          resultado = v1 <= v2; // verifica se o primeiro é menor ou igual
+          break;
+        default:
+          resultado = 'Operador inválido'; // se não for nenhum dos anteriores
+      }
+
+      // Aqui a gente mostra o resultado na tela
+      document.getElementById('resultado').innerText = `Resultado: ${resultado}`;
+
+      // Salvar no histórico
+      salvarNoHistorico(v1, v2, operador, resultado);
+    }
+
+    // Função para salvar no histórico
+    function salvarNoHistorico(v1, v2, operador, resultado) {
+      const operacao = {
+        valor1: v1,
+        valor2: v2,
+        operador: operador,
+        resultado: resultado
+      };
+
+      let historico = JSON.parse(localStorage.getItem('historico')) || [];
+      historico.push(operacao);
+      localStorage.setItem('historico', JSON.stringify(historico));
+
+      mostrarHistorico();
+    }
+
+    // Função para mostrar o histórico
+    function mostrarHistorico() {
+      const historico = JSON.parse(localStorage.getItem('historico')) || [];
+      const listaHistorico = document.getElementById('historico-lista');
+      listaHistorico.innerHTML = '';
+
+      historico.forEach((operacao, index) => {
+        const item = document.createElement('li');
+        item.innerHTML = `
+          ${operacao.valor1} ${operacao.operador} ${operacao.valor2} = ${operacao.resultado}
+          <button onclick="deletarOperacao(${index})">Deletar</button>
+        `;
+        listaHistorico.appendChild(item);
+      });
+    }
+
+    // Função para deletar uma operação
+    function deletarOperacao(index) {
+      let historico = JSON.parse(localStorage.getItem('historico')) || [];
+      historico.splice(index, 1);
+      localStorage.setItem('historico', JSON.stringify(historico));
+
+      mostrarHistorico();
+    }
+
+    // Função para abrir o modal
+    function abrirModal() {
+      document.getElementById('modalHistorico').style.display = 'block';
+    }
+
+    // Função para fechar o modal
+    function fecharModal() {
+      document.getElementById('modalHistorico').style.display = 'none';
+    }
+
+    // Carregar o histórico ao iniciar
+    window.onload = function() {
+      mostrarHistorico();
+    };
+  </script>
+</body>
+
+</html>
